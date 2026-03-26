@@ -1,0 +1,17 @@
+services:
+  ros2-tb3:
+    build:
+      context: ./docker
+      dockerfile: Dockerfile
+    ports:
+      - "6080:80"
+    environment:
+      - USER=ubuntu
+      - PASSWD=ubuntu
+    mem_limit: 5g
+    memswap_limit: 6g
+    volumes:
+      - ./ros_ws/src:/home/ubuntu/ros_ws/src
+    stdin_open: true
+    tty: true
+    restart: unless-stopped

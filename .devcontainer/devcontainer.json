@@ -1,0 +1,28 @@
+{
+  "name": "ROS2 TurtleBot3",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "ros2-tb3",
+  "workspaceFolder": "/home/ubuntu/ros_ws",
+  "remoteUser": "ubuntu",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-iot.vscode-ros",
+        "ms-python.python",
+        "ms-vscode.cpptools",
+        "ms-vscode.cpptools-extension-pack",
+        "twxs.cmake",
+        "ms-vscode.cmake-tools"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/bin/python3",
+        "ros.distro": "jazzy",
+        "editor.formatOnSave": true,
+        "editor.tabSize": 2
+      }
+    }
+  },
+
+  "postAttachCommand": "source /opt/ros/jazzy/setup.bash"
+}

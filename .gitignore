@@ -1,0 +1,14 @@
+build/
+install/
+log/
+
+*.log
+*.tmp
+
+.vscode/
+.devcontainer/.cache/
+
+__pycache__/
+*.pyc
+
+.env

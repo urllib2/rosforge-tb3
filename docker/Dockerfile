@@ -38,9 +38,6 @@ RUN git clone https://github.com/AtsushiSaito/noVNC.git -b add_clipboard_support
 
 RUN sed -i "s/UI.initSetting('resize', 'off');/UI.initSetting('resize', 'remote');/g" /usr/lib/novnc/app/ui.js
 
-RUN sed -i 's/Prompt=.*/Prompt=never/' /etc/update-manager/release-upgrades && \
-    sed -i 's/enabled=1/enabled=0/g' /etc/default/apport
-
 # ==========================================
 # ROS2 Jazzy + Nav2 + SLAM Toolbox + TB3
 # ==========================================

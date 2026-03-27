@@ -89,6 +89,9 @@ RUN bash /setup_container.bash
 
 COPY ./entrypoint.sh /
 
+COPY ./entrypoint.sh /
+RUN chmod +x /entrypoint.sh
+
 ENV USER=ubuntu
 ENV PASSWD=ubuntu
 ENV TURTLEBOT3_MODEL=burger

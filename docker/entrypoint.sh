@@ -43,6 +43,31 @@ chown -R "$USER:$USER" "$HOME_DIR/.vnc"
 sed -i "s/password = WebUtil.getConfigVar('password');/password = '$VNC_PASSWORD'/" /usr/lib/novnc/app/ui.js
 
 # ==========================================
+# XFCE startup script (runs as ubuntu user)
+# ==========================================
+cat <<EOF > /usr/local/bin/start-xfce.sh
+#!/bin/bash
+# Wait for Xvnc to be ready
+for i in \$(seq 1 20); do
+    if DISPLAY=:1 xdpyinfo >/dev/null 2>&1; then
+        break
+    fi
+    echo "Waiting for Xvnc... \$i"
+    sleep 1
+done
+
+export DISPLAY=:1
+export HOME=$HOME_DIR
+export USER=$USER
+
+# Start dbus session and XFCE
+eval \$(dbus-launch --sh-syntax)
+export DBUS_SESSION_BUS_ADDRESS
+exec startxfce4
+EOF
+chmod +x /usr/local/bin/start-xfce.sh
+
+# ==========================================
 # Supervisor config
 # ==========================================
 cat <<EOF > /etc/supervisor/conf.d/supervisord.conf
@@ -58,11 +83,10 @@ stdout_logfile=/var/log/xvnc.log
 stderr_logfile=/var/log/xvnc.log
 
 [program:xfce]
-command=gosu $USER bash -c "dbus-launch --exit-with-session startxfce4"
-environment=DISPLAY=":1",HOME="$HOME_DIR",USER="$USER"
+command=gosu $USER /usr/local/bin/start-xfce.sh
 autorestart=true
 priority=20
-startsecs=3
+startsecs=5
 stdout_logfile=/var/log/xfce.log
 stderr_logfile=/var/log/xfce.log
 

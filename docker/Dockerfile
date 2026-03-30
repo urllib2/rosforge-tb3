@@ -21,6 +21,7 @@ RUN apt-get update -q && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
     xfce4 xfce4-terminal xfwm4 \
     dbus-x11 \
+    x11-utils \
     tigervnc-standalone-server tigervnc-common \
     supervisor wget curl gosu git sudo \
     python3-full python3-pip tini \

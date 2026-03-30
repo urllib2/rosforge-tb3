@@ -27,7 +27,7 @@ RUN apt-get update -q && \
     build-essential vim lsb-release locales \
     bash-completion tzdata \
     curl gnupg2 \
-    dbus-x11 \        # <-- add here
+    dbus-x11 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 

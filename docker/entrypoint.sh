@@ -21,6 +21,12 @@ if [ "$USER" != "root" ]; then
 fi
 
 # ==========================================
+# Fix /tmp/.X11-unix (must be done as root)
+# ==========================================
+mkdir -p /tmp/.X11-unix
+chmod 1777 /tmp/.X11-unix
+
+# ==========================================
 # VNC Password
 # ==========================================
 VNC_PASSWORD=${PASSWD:-ubuntu}
@@ -31,39 +37,35 @@ chown -R "$USER:$USER" "$HOME_DIR/.vnc"
 sed -i "s/password = WebUtil.getConfigVar('password');/password = '$VNC_PASSWORD'/" /usr/lib/novnc/app/ui.js
 
 # ==========================================
-# VNC xstartup (XFCE)
-# ==========================================
-cat <<EOF > "$HOME_DIR/.vnc/xstartup"
-#!/bin/sh
-unset DBUS_SESSION_BUS_ADDRESS
-startxfce4 &
-EOF
-chmod +x "$HOME_DIR/.vnc/xstartup"
-chown "$USER:$USER" "$HOME_DIR/.vnc/xstartup"
-
-# ==========================================
-# VNC run script
-# ==========================================
-cat <<EOF > "$HOME_DIR/.vnc/vnc_run.sh"
-#!/bin/bash
-rm -rf /tmp/.X1-lock /tmp/.X11-unix/X1
-vncserver :1 -geometry 1280x720 -depth 24 -fg
-EOF
-chmod +x "$HOME_DIR/.vnc/vnc_run.sh"
-chown "$USER:$USER" "$HOME_DIR/.vnc/vnc_run.sh"
-
-# ==========================================
-# Supervisor config
+# Supervisor config — launch Xvnc directly
+# then start XFCE inside it
 # ==========================================
 cat <<EOF > /etc/supervisor/conf.d/supervisord.conf
 [supervisord]
 nodaemon=true
 
-[program:vnc]
-command=gosu $USER bash $HOME_DIR/.vnc/vnc_run.sh
+[program:xvnc]
+command=Xvnc :1 -geometry 1280x720 -depth 24 -rfbauth $HOME_DIR/.vnc/passwd -rfbport 5901 -localhost no
+autorestart=true
+priority=10
+stdout_logfile=/var/log/xvnc.log
+stderr_logfile=/var/log/xvnc.log
+
+[program:xfce]
+command=gosu $USER bash -c "DISPLAY=:1 DBUS_SESSION_BUS_ADDRESS='' startxfce4"
+autorestart=true
+priority=20
+startsecs=3
+stdout_logfile=/var/log/xfce.log
+stderr_logfile=/var/log/xfce.log
 
 [program:novnc]
-command=gosu $USER bash -c "websockify --web=/usr/lib/novnc 80 localhost:5901"
+command=websockify --web=/usr/lib/novnc 80 localhost:5901
+autorestart=true
+priority=30
+startsecs=3
+stdout_logfile=/var/log/novnc.log
+stderr_logfile=/var/log/novnc.log
 EOF
 
 # ==========================================

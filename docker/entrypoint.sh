@@ -31,20 +31,12 @@ chown -R "$USER:$USER" "$HOME_DIR/.vnc"
 sed -i "s/password = WebUtil.getConfigVar('password');/password = '$VNC_PASSWORD'/" /usr/lib/novnc/app/ui.js
 
 # ==========================================
-# Fix /tmp/.X11-unix permissions (must run as root)
-# ==========================================
-mkdir -p /tmp/.X11-unix
-chmod 1777 /tmp/.X11-unix
-
-# ==========================================
 # VNC xstartup (XFCE)
 # ==========================================
 cat <<EOF > "$HOME_DIR/.vnc/xstartup"
 #!/bin/sh
-unset SESSION_MANAGER
 unset DBUS_SESSION_BUS_ADDRESS
-export DISPLAY=:1
-exec startxfce4
+startxfce4 &
 EOF
 chmod +x "$HOME_DIR/.vnc/xstartup"
 chown "$USER:$USER" "$HOME_DIR/.vnc/xstartup"
@@ -55,7 +47,7 @@ chown "$USER:$USER" "$HOME_DIR/.vnc/xstartup"
 cat <<EOF > "$HOME_DIR/.vnc/vnc_run.sh"
 #!/bin/bash
 rm -rf /tmp/.X1-lock /tmp/.X11-unix/X1
-vncserver :1 -geometry 1280x720 -depth 24 -fg -localhost no
+vncserver :1 -geometry 1280x720 -depth 24 -fg
 EOF
 chmod +x "$HOME_DIR/.vnc/vnc_run.sh"
 chown "$USER:$USER" "$HOME_DIR/.vnc/vnc_run.sh"
@@ -69,17 +61,9 @@ nodaemon=true
 
 [program:vnc]
 command=gosu $USER bash $HOME_DIR/.vnc/vnc_run.sh
-autorestart=true
-startretries=3
-stdout_logfile=/var/log/vnc.log
-stderr_logfile=/var/log/vnc.log
 
 [program:novnc]
 command=gosu $USER bash -c "websockify --web=/usr/lib/novnc 80 localhost:5901"
-autorestart=true
-startretries=3
-stdout_logfile=/var/log/novnc.log
-stderr_logfile=/var/log/novnc.log
 EOF
 
 # ==========================================

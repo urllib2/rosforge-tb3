@@ -27,6 +27,12 @@ mkdir -p /tmp/.X11-unix
 chmod 1777 /tmp/.X11-unix
 
 # ==========================================
+# Start dbus system daemon
+# ==========================================
+mkdir -p /run/dbus
+dbus-daemon --system --fork || true
+
+# ==========================================
 # VNC Password
 # ==========================================
 VNC_PASSWORD=${PASSWD:-ubuntu}
@@ -37,8 +43,7 @@ chown -R "$USER:$USER" "$HOME_DIR/.vnc"
 sed -i "s/password = WebUtil.getConfigVar('password');/password = '$VNC_PASSWORD'/" /usr/lib/novnc/app/ui.js
 
 # ==========================================
-# Supervisor config — launch Xvnc directly
-# then start XFCE inside it
+# Supervisor config
 # ==========================================
 cat <<EOF > /etc/supervisor/conf.d/supervisord.conf
 [supervisord]
@@ -48,11 +53,13 @@ nodaemon=true
 command=Xvnc :1 -geometry 1280x720 -depth 24 -rfbauth $HOME_DIR/.vnc/passwd -rfbport 5901 -localhost no
 autorestart=true
 priority=10
+startsecs=1
 stdout_logfile=/var/log/xvnc.log
 stderr_logfile=/var/log/xvnc.log
 
 [program:xfce]
-command=gosu $USER bash -c "DISPLAY=:1 DBUS_SESSION_BUS_ADDRESS='' startxfce4"
+command=gosu $USER bash -c "dbus-launch --exit-with-session startxfce4"
+environment=DISPLAY=":1",HOME="$HOME_DIR",USER="$USER"
 autorestart=true
 priority=20
 startsecs=3

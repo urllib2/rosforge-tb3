@@ -133,8 +133,8 @@ chown "$USER:$USER" "$BASHRC"
 mkdir -p "$HOME_DIR/Desktop"
 cat <<EOF > "$HOME_DIR/Desktop/terminal.desktop"
 [Desktop Entry]
-Name=Terminal
-Exec=xfce4-terminal
+Name=Terminator
+Exec=terminator
 Icon=utilities-terminal
 Type=Application
 Categories=Utility;TerminalEmulator;

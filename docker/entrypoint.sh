@@ -128,10 +128,11 @@ grep -q "CYCLONEDDS_URI" "$BASHRC" || \
 chown "$USER:$USER" "$BASHRC"
 
 # ==========================================
-# Desktop shortcut — xfce4-terminal
+# Desktop shortcut — Terminator
 # ==========================================
 mkdir -p "$HOME_DIR/Desktop"
-cat <<EOF > "$HOME_DIR/Desktop/terminal.desktop"
+rm -f "$HOME_DIR/Desktop/terminal.desktop"
+cat <<EOF > "$HOME_DIR/Desktop/terminator.desktop"
 [Desktop Entry]
 Name=Terminator
 Exec=terminator
@@ -139,8 +140,8 @@ Icon=utilities-terminal
 Type=Application
 Categories=Utility;TerminalEmulator;
 EOF
-chmod +x "$HOME_DIR/Desktop/terminal.desktop"
-chown -R "$USER:$USER" "$HOME_DIR/Desktop"
+chmod +x "$HOME_DIR/Desktop/terminator.desktop"
+chown -R "$HOME_DIR/Desktop"
 
 # ==========================================
 # ROS home permissions

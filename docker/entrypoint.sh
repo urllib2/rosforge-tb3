@@ -141,7 +141,7 @@ Type=Application
 Categories=Utility;TerminalEmulator;
 EOF
 chmod +x "$HOME_DIR/Desktop/terminator.desktop"
-chown -R "$HOME_DIR/Desktop"
+chown -R "$USER:$USER" "$HOME_DIR/Desktop"
 
 # ==========================================
 # ROS home permissions

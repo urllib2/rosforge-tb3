@@ -19,6 +19,11 @@ chmod 0440 /etc/sudoers.d/$USER
 mkdir -p $WS/src
 chown -R $USER:$USER $HOME_DIR
 
+# Mark terminator desktop file as executable
+mkdir -p $HOME_DIR/Desktop
+chmod +x $HOME_DIR/Desktop/terminator.desktop 2>/dev/null || true
+chown -R $USER:$USER $HOME_DIR/Desktop
+
 # ==========================================
 # Python tools
 # ==========================================

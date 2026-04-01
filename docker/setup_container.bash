@@ -32,13 +32,15 @@ cat <<EOF > $HOME_DIR/cyclone_config.xml
 <CycloneDDS>
   <Domain>
     <General>
-      <AllowMulticast>false</AllowMulticast>
+      <Interfaces>
+        <NetworkInterface name="lo" priority="default" multicast="true"/>
+      </Interfaces>
+      <AllowMulticast>true</AllowMulticast>
       <MaxMessageSize>65500B</MaxMessageSize>
     </General>
   </Domain>
 </CycloneDDS>
 EOF
-chown $USER:$USER $HOME_DIR/cyclone_config.xml
 
 # ==========================================
 # Environment

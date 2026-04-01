@@ -155,7 +155,7 @@ chown -R "$USER:$USER" "$HOME_DIR/Desktop"
 # ROS home permissions
 # ==========================================
 mkdir -p "$HOME_DIR/.ros"
-chown -R "$HOME_DIR/.ros"
+chown -R "$USER:$USER" "$HOME_DIR/.ros"
 
 # ==========================================
 # Start services

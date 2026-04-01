@@ -60,6 +60,11 @@ export DISPLAY=:1
 export HOME=$HOME_DIR
 export USER=$USER
 
+# Mark desktop files as trusted before XFCE starts
+mkdir -p $HOME_DIR/Desktop
+chmod +x $HOME_DIR/Desktop/*.desktop 2>/dev/null || true
+chown -R $USER:$USER $HOME_DIR/Desktop 2>/dev/null || true
+
 # Start dbus session and XFCE
 eval \$(dbus-launch --sh-syntax)
 export DBUS_SESSION_BUS_ADDRESS

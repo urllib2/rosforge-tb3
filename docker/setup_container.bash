@@ -1,29 +1,22 @@
 #!/bin/bash
 set -e
-
 echo "===== ROS2 Workspace Setup ====="
-
 source /opt/ros/jazzy/setup.bash
-
 USER=ubuntu
 HOME_DIR=/home/$USER
 WS=$HOME_DIR/ros_ws
-
 # ==========================================
 # Create user if not exists
 # ==========================================
 id -u $USER &>/dev/null || adduser --disabled-password --gecos "" $USER
 echo "$USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/$USER
 chmod 0440 /etc/sudoers.d/$USER
-
 mkdir -p $WS/src
 chown -R $USER:$USER $HOME_DIR
-
 # ==========================================
 # Python tools
 # ==========================================
 pip install --break-system-packages black urdf-parser-py
-
 # ==========================================
 # CycloneDDS config
 # ==========================================
@@ -32,19 +25,20 @@ cat <<EOF > $HOME_DIR/cyclone_config.xml
 <CycloneDDS>
   <Domain>
     <General>
-      <AllowMulticast>false</AllowMulticast>
+      <Interfaces>
+        <NetworkInterface name="lo" priority="default" multicast="true"/>
+      </Interfaces>
+      <AllowMulticast>true</AllowMulticast>
       <MaxMessageSize>65500B</MaxMessageSize>
     </General>
   </Domain>
 </CycloneDDS>
 EOF
 chown $USER:$USER $HOME_DIR/cyclone_config.xml
-
 # ==========================================
 # Environment
 # ==========================================
 BASHRC="$HOME_DIR/.bashrc"
-
 echo "source /opt/ros/jazzy/setup.bash" >> $BASHRC
 echo "[ -f $WS/install/setup.bash ] && source $WS/install/setup.bash" >> $BASHRC
 echo "export TURTLEBOT3_MODEL=burger" >> $BASHRC
@@ -56,7 +50,5 @@ echo "export PYTHONWARNINGS=\"ignore:setup.py install is deprecated\"" >> $BASHR
 echo "export LIBGL_ALWAYS_SOFTWARE=1" >> $BASHRC
 echo "export MESA_GL_VERSION_OVERRIDE=3.3" >> $BASHRC
 echo "export GZ_VERBOSE=0" >> $BASHRC
-
 chown $USER:$USER $BASHRC
-
 echo "===== Setup complete ====="

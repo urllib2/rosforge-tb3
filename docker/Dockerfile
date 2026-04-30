@@ -21,11 +21,13 @@ RUN apt-get update -q && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
     xfce4 xfce4-terminal xfwm4 \
     dbus-x11 \
+    x11-utils \
     tigervnc-standalone-server tigervnc-common \
     supervisor wget curl gosu git sudo \
     python3-full python3-pip tini \
     build-essential vim lsb-release locales \
     bash-completion tzdata \
+    terminator \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # ==========================================
@@ -54,6 +56,7 @@ RUN apt-get update -q && \
         ros-${ROS_DISTRO}-geometry-msgs \
         ros-${ROS_DISTRO}-sensor-msgs \
         ros-${ROS_DISTRO}-std-srvs \
+        ros-${ROS_DISTRO}-urdf-tutorial \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # ==========================================

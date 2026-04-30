@@ -21,6 +21,18 @@ if [ "$USER" != "root" ]; then
 fi
 
 # ==========================================
+# Fix /tmp/.X11-unix (must be done as root)
+# ==========================================
+mkdir -p /tmp/.X11-unix
+chmod 1777 /tmp/.X11-unix
+
+# ==========================================
+# Start dbus system daemon
+# ==========================================
+mkdir -p /run/dbus
+dbus-daemon --system --fork || true
+
+# ==========================================
 # VNC Password
 # ==========================================
 VNC_PASSWORD=${PASSWD:-ubuntu}
@@ -31,34 +43,29 @@ chown -R "$USER:$USER" "$HOME_DIR/.vnc"
 sed -i "s/password = WebUtil.getConfigVar('password');/password = '$VNC_PASSWORD'/" /usr/lib/novnc/app/ui.js
 
 # ==========================================
-# Fix /tmp/.X11-unix permissions (must run as root)
+# XFCE startup script (runs as ubuntu user)
 # ==========================================
-mkdir -p /tmp/.X11-unix
-chmod 1777 /tmp/.X11-unix
+cat <<EOF > /usr/local/bin/start-xfce.sh
+#!/bin/bash
+# Wait for Xvnc to be ready
+for i in \$(seq 1 20); do
+    if DISPLAY=:1 xdpyinfo >/dev/null 2>&1; then
+        break
+    fi
+    echo "Waiting for Xvnc... \$i"
+    sleep 1
+done
 
-# ==========================================
-# VNC xstartup (XFCE)
-# ==========================================
-cat <<EOF > "$HOME_DIR/.vnc/xstartup"
-#!/bin/sh
-unset SESSION_MANAGER
-unset DBUS_SESSION_BUS_ADDRESS
 export DISPLAY=:1
+export HOME=$HOME_DIR
+export USER=$USER
+
+# Start dbus session and XFCE
+eval \$(dbus-launch --sh-syntax)
+export DBUS_SESSION_BUS_ADDRESS
 exec startxfce4
 EOF
-chmod +x "$HOME_DIR/.vnc/xstartup"
-chown "$USER:$USER" "$HOME_DIR/.vnc/xstartup"
-
-# ==========================================
-# VNC run script
-# ==========================================
-cat <<EOF > "$HOME_DIR/.vnc/vnc_run.sh"
-#!/bin/bash
-rm -rf /tmp/.X1-lock /tmp/.X11-unix/X1
-vncserver :1 -geometry 1280x720 -depth 24 -fg -localhost no
-EOF
-chmod +x "$HOME_DIR/.vnc/vnc_run.sh"
-chown "$USER:$USER" "$HOME_DIR/.vnc/vnc_run.sh"
+chmod +x /usr/local/bin/start-xfce.sh
 
 # ==========================================
 # Supervisor config
@@ -67,17 +74,27 @@ cat <<EOF > /etc/supervisor/conf.d/supervisord.conf
 [supervisord]
 nodaemon=true
 
-[program:vnc]
-command=gosu $USER bash $HOME_DIR/.vnc/vnc_run.sh
+[program:xvnc]
+command=Xvnc :1 -geometry 1280x720 -depth 24 -rfbauth $HOME_DIR/.vnc/passwd -rfbport 5901 -localhost no
 autorestart=true
-startretries=3
-stdout_logfile=/var/log/vnc.log
-stderr_logfile=/var/log/vnc.log
+priority=10
+startsecs=1
+stdout_logfile=/var/log/xvnc.log
+stderr_logfile=/var/log/xvnc.log
+
+[program:xfce]
+command=gosu $USER /usr/local/bin/start-xfce.sh
+autorestart=true
+priority=20
+startsecs=5
+stdout_logfile=/var/log/xfce.log
+stderr_logfile=/var/log/xfce.log
 
 [program:novnc]
-command=gosu $USER bash -c "websockify --web=/usr/lib/novnc 80 localhost:5901"
+command=websockify --web=/usr/lib/novnc 80 localhost:5901
 autorestart=true
-startretries=3
+priority=30
+startsecs=3
 stdout_logfile=/var/log/novnc.log
 stderr_logfile=/var/log/novnc.log
 EOF
@@ -111,18 +128,19 @@ grep -q "CYCLONEDDS_URI" "$BASHRC" || \
 chown "$USER:$USER" "$BASHRC"
 
 # ==========================================
-# Desktop shortcut — xfce4-terminal
+# Desktop shortcut — Terminator
 # ==========================================
 mkdir -p "$HOME_DIR/Desktop"
-cat <<EOF > "$HOME_DIR/Desktop/terminal.desktop"
+rm -f "$HOME_DIR/Desktop/terminal.desktop"
+cat <<EOF > "$HOME_DIR/Desktop/terminator.desktop"
 [Desktop Entry]
-Name=Terminal
-Exec=xfce4-terminal
+Name=Terminator
+Exec=terminator
 Icon=utilities-terminal
 Type=Application
 Categories=Utility;TerminalEmulator;
 EOF
-chmod +x "$HOME_DIR/Desktop/terminal.desktop"
+chmod +x "$HOME_DIR/Desktop/terminator.desktop"
 chown -R "$USER:$USER" "$HOME_DIR/Desktop"
 
 # ==========================================

@@ -1,6 +1,6 @@
 services:
   ros2-tb3:
-    build:
+    image: urllib2/rosforge-tb3:latest
       context: ./docker
       dockerfile: Dockerfile
     ports:

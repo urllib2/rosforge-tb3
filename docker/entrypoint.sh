@@ -1,66 +1,130 @@
 #!/bin/bash
+# ==============================================================
+# entrypoint.sh  —  RUNTIME ONLY
+# Runs every time the container starts. Idempotent: safe to
+# restart the container without side effects.
+# ==============================================================
 set -e
 
 # ==========================================
-# Create User
+# Resolve user / home
 # ==========================================
-USER=${USER:-root}
+TARGET_USER=${USER:-root}
 HOME_DIR=/root
 
-if [ "$USER" != "root" ]; then
-    echo "* Creating user: $USER"
-    id -u "$USER" &>/dev/null || \
-        useradd --create-home --shell /bin/bash --user-group --groups adm,sudo "$USER"
-    echo "$USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+if [ "$TARGET_USER" != "root" ]; then
+    echo "* Ensuring user: $TARGET_USER"
+
+    # Create user only if it doesn't exist yet
+    if ! id -u "$TARGET_USER" &>/dev/null; then
+        useradd --create-home --shell /bin/bash \
+                --user-group --groups adm,sudo "$TARGET_USER"
+    fi
+
+    # Passwordless sudo (write to a dedicated drop-in, not /etc/sudoers)
+    echo "$TARGET_USER ALL=(ALL) NOPASSWD:ALL" \
+        > /etc/sudoers.d/90-${TARGET_USER}-nopasswd
+    chmod 0440 /etc/sudoers.d/90-${TARGET_USER}-nopasswd
+
+    # Set login password from env (default: ubuntu)
     PASSWORD=${PASSWD:-ubuntu}
-    echo "$USER:$PASSWORD" | chpasswd
-    HOME_DIR="/home/$USER"
+    echo "$TARGET_USER:$PASSWORD" | chpasswd
+
+    HOME_DIR="/home/$TARGET_USER"
     cp -r /root/.asoundrc "$HOME_DIR/" 2>/dev/null || true
-    chown -R "$USER:$USER" "$HOME_DIR"
+    chown -R "$TARGET_USER:$TARGET_USER" "$HOME_DIR"
     [ -d "/dev/snd" ] && chgrp -R adm /dev/snd
 fi
 
 # ==========================================
-# Fix /tmp/.X11-unix (must be done as root)
+# Fix /tmp/.X11-unix  (must run as root)
 # ==========================================
 mkdir -p /tmp/.X11-unix
 chmod 1777 /tmp/.X11-unix
 
 # ==========================================
-# Start dbus system daemon
+# dbus system daemon
 # ==========================================
 mkdir -p /run/dbus
 dbus-daemon --system --fork || true
 
 # ==========================================
-# VNC Password
+# VNC password
 # ==========================================
 VNC_PASSWORD=${PASSWD:-ubuntu}
 mkdir -p "$HOME_DIR/.vnc"
 echo "$VNC_PASSWORD" | vncpasswd -f > "$HOME_DIR/.vnc/passwd"
 chmod 600 "$HOME_DIR/.vnc/passwd"
-chown -R "$USER:$USER" "$HOME_DIR/.vnc"
-sed -i "s/password = WebUtil.getConfigVar('password');/password = '$VNC_PASSWORD'/" /usr/lib/novnc/app/ui.js
+chown -R "$TARGET_USER:$TARGET_USER" "$HOME_DIR/.vnc"
+sed -i "s/password = WebUtil.getConfigVar('password');/password = '$VNC_PASSWORD'/" \
+    /usr/lib/novnc/app/ui.js
 
 # ==========================================
-# XFCE startup script (runs as ubuntu user)
+# CycloneDDS config — copy from /etc to home
+# (home may be a bind-mount that didn't exist at build time)
+# ==========================================
+if [ ! -f "$HOME_DIR/cyclone_config.xml" ]; then
+    cp /etc/cyclone_config.xml "$HOME_DIR/cyclone_config.xml"
+    chown "$TARGET_USER:$TARGET_USER" "$HOME_DIR/cyclone_config.xml"
+fi
+
+# ==========================================
+# .bashrc — write once, guarded by grep
+# All env vars that affect interactive terminals go here.
+# Process-level vars (Gazebo, OpenGL) are set in Dockerfile ENV.
+# ==========================================
+BASHRC="$HOME_DIR/.bashrc"
+
+_append_if_missing() {
+    local marker="$1"
+    local line="$2"
+    grep -qF "$marker" "$BASHRC" 2>/dev/null || echo "$line" >> "$BASHRC"
+}
+
+_append_if_missing "source /opt/ros/$ROS_DISTRO/setup.bash" \
+    "source /opt/ros/$ROS_DISTRO/setup.bash"
+
+_append_if_missing "ros_ws/install/setup.bash" \
+    "[ -f $HOME_DIR/ros_ws/install/setup.bash ] && source $HOME_DIR/ros_ws/install/setup.bash"
+
+_append_if_missing "TURTLEBOT3_MODEL" \
+    "export TURTLEBOT3_MODEL=burger"
+
+_append_if_missing "GZ_SIM_RESOURCE_PATH" \
+    "export GZ_SIM_RESOURCE_PATH=\$GZ_SIM_RESOURCE_PATH:/opt/ros/jazzy/share/turtlebot3_gazebo/models"
+
+_append_if_missing "SDF_PATH" \
+    "export SDF_PATH=\$SDF_PATH:/opt/ros/jazzy/share/turtlebot3_gazebo/models"
+
+_append_if_missing "RMW_IMPLEMENTATION" \
+    "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp"
+
+_append_if_missing "CYCLONEDDS_URI" \
+    "export CYCLONEDDS_URI=file://$HOME_DIR/cyclone_config.xml"
+
+_append_if_missing "PYTHONWARNINGS" \
+    "export PYTHONWARNINGS=\"ignore:setup.py install is deprecated\""
+
+_append_if_missing "GZ_VERBOSE" \
+    "export GZ_VERBOSE=0"
+
+chown "$TARGET_USER:$TARGET_USER" "$BASHRC"
+
+# ==========================================
+# XFCE startup script
 # ==========================================
 cat <<EOF > /usr/local/bin/start-xfce.sh
 #!/bin/bash
-# Wait for Xvnc to be ready
 for i in \$(seq 1 20); do
-    if DISPLAY=:1 xdpyinfo >/dev/null 2>&1; then
-        break
-    fi
+    DISPLAY=:1 xdpyinfo >/dev/null 2>&1 && break
     echo "Waiting for Xvnc... \$i"
     sleep 1
 done
 
 export DISPLAY=:1
 export HOME=$HOME_DIR
-export USER=$USER
+export USER=$TARGET_USER
 
-# Start dbus session and XFCE
 eval \$(dbus-launch --sh-syntax)
 export DBUS_SESSION_BUS_ADDRESS
 exec startxfce4
@@ -83,7 +147,7 @@ stdout_logfile=/var/log/xvnc.log
 stderr_logfile=/var/log/xvnc.log
 
 [program:xfce]
-command=gosu $USER /usr/local/bin/start-xfce.sh
+command=gosu $TARGET_USER /usr/local/bin/start-xfce.sh
 autorestart=true
 priority=20
 startsecs=5
@@ -100,38 +164,9 @@ stderr_logfile=/var/log/novnc.log
 EOF
 
 # ==========================================
-# ROS Environment
-# ==========================================
-BASHRC="$HOME_DIR/.bashrc"
-
-grep -q "source /opt/ros/$ROS_DISTRO/setup.bash" "$BASHRC" || \
-    echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> "$BASHRC"
-
-grep -q "ros_ws/install/setup.bash" "$BASHRC" || \
-    echo "[ -f /home/ubuntu/ros_ws/install/setup.bash ] && source /home/ubuntu/ros_ws/install/setup.bash" >> "$BASHRC"
-
-grep -q "TURTLEBOT3_MODEL" "$BASHRC" || \
-    echo "export TURTLEBOT3_MODEL=burger" >> "$BASHRC"
-
-grep -q "GZ_SIM_RESOURCE_PATH" "$BASHRC" || \
-    echo "export GZ_SIM_RESOURCE_PATH=\$GZ_SIM_RESOURCE_PATH:/opt/ros/jazzy/share/turtlebot3_gazebo/models" >> "$BASHRC"
-
-grep -q "SDF_PATH" "$BASHRC" || \
-    echo "export SDF_PATH=\$SDF_PATH:/opt/ros/jazzy/share/turtlebot3_gazebo/models" >> "$BASHRC"
-
-grep -q "RMW_IMPLEMENTATION" "$BASHRC" || \
-    echo "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp" >> "$BASHRC"
-
-grep -q "CYCLONEDDS_URI" "$BASHRC" || \
-    echo "export CYCLONEDDS_URI=file:///home/ubuntu/cyclone_config.xml" >> "$BASHRC"
-
-chown "$USER:$USER" "$BASHRC"
-
-# ==========================================
 # Desktop shortcut — Terminator
 # ==========================================
 mkdir -p "$HOME_DIR/Desktop"
-rm -f "$HOME_DIR/Desktop/terminal.desktop"
 cat <<EOF > "$HOME_DIR/Desktop/terminator.desktop"
 [Desktop Entry]
 Name=Terminator
@@ -141,13 +176,16 @@ Type=Application
 Categories=Utility;TerminalEmulator;
 EOF
 chmod +x "$HOME_DIR/Desktop/terminator.desktop"
-chown -R "$USER:$USER" "$HOME_DIR/Desktop"
+# Mark as trusted so XFCE doesn't show the "untrusted app" dialog
+gio set "$HOME_DIR/Desktop/terminator.desktop" \
+    metadata::trusted true 2>/dev/null || true
+chown -R "$TARGET_USER:$TARGET_USER" "$HOME_DIR/Desktop"
 
 # ==========================================
-# ROS home permissions
+# ROS home dir permissions
 # ==========================================
 mkdir -p "$HOME_DIR/.ros"
-chown -R "$USER:$USER" "$HOME_DIR/.ros"
+chown -R "$TARGET_USER:$TARGET_USER" "$HOME_DIR/.ros"
 
 # ==========================================
 # Start services

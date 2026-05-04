@@ -2,7 +2,7 @@ FROM osrf/ros:jazzy-desktop-full
 ARG TARGETPLATFORM
 ARG TARGETARCH
 ARG QEMU_CPU
-LABEL maintainer="you"
+LABEL maintainer="Sami Turki - RosForge.com"
 SHELL ["/bin/bash", "-c"]
 
 # ==========================================
@@ -13,6 +13,17 @@ SHELL ["/bin/bash", "-c"]
 # ==========================================
 
 ENV ROS_DISTRO=jazzy
+
+# ==========================================
+# OpenGL / Gazebo — set as ENV so these apply to ALL
+# processes (not just login shells that source .bashrc)
+# ==========================================
+ENV LIBGL_ALWAYS_SOFTWARE=1
+ENV MESA_GL_VERSION_OVERRIDE=3.3
+ENV GZ_VERBOSE=0
+ENV TURTLEBOT3_MODEL=burger
+ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+ENV CYCLONEDDS_URI=file:///home/ubuntu/cyclone_config.xml
 
 # ==========================================
 # Desktop + VNC + noVNC
@@ -60,21 +71,22 @@ RUN apt-get update -q && \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # ==========================================
-# Python tools
-# ==========================================
-RUN pip install --break-system-packages --no-cache-dir black urdf-parser-py
-
-# ==========================================
-# Setup + entrypoint
+# Build-time setup (Python tools, static config files)
+# Does NOT touch users or .bashrc — that's entrypoint.sh's job
 # ==========================================
 COPY ./setup_container.bash /
 RUN chmod +x /setup_container.bash && bash /setup_container.bash
 
+# ==========================================
+# Runtime entrypoint
+# ==========================================
 COPY ./entrypoint.sh /
 RUN chmod +x /entrypoint.sh
 
 ENV USER=ubuntu
 ENV PASSWD=ubuntu
-ENV TURTLEBOT3_MODEL=burger
 
-CMD ["/bin/bash", "-c", "/entrypoint.sh"]
+HEALTHCHECK --interval=15s --timeout=5s --start-period=20s --retries=3 \
+    CMD curl -f http://localhost:80 || exit 1
+
+CMD ["/entrypoint.sh"]

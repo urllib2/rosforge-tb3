@@ -1,8 +1,6 @@
 services:
   ros2-tb3:
     image: urllib2/rosforge-tb3:latest
-      context: ./docker
-      dockerfile: Dockerfile
     ports:
       - "6080:80"
     environment:

@@ -39,6 +39,7 @@ RUN apt-get update -q && \
     build-essential vim lsb-release locales \
     bash-completion tzdata \
     terminator \
+    evince \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # ==========================================
@@ -50,7 +51,7 @@ RUN git clone https://github.com/AtsushiSaito/noVNC.git -b add_clipboard_support
     sed -i "s/UI.initSetting('resize', 'off');/UI.initSetting('resize', 'remote');/g" /usr/lib/novnc/app/ui.js
 
 # ==========================================
-# TB3 + Nav2 + SLAM + DDS
+# TB3 + Nav2 + SLAM + DDS + Tools
 # ==========================================
 RUN apt-get update -q && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
@@ -68,6 +69,7 @@ RUN apt-get update -q && \
         ros-${ROS_DISTRO}-sensor-msgs \
         ros-${ROS_DISTRO}-std-srvs \
         ros-${ROS_DISTRO}-urdf-tutorial \
+        ros-${ROS_DISTRO}-rqt-tf-tree \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # ==========================================

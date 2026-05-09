@@ -70,6 +70,8 @@ RUN apt-get update -q && \
         ros-${ROS_DISTRO}-std-srvs \
         ros-${ROS_DISTRO}-urdf-tutorial \
         ros-${ROS_DISTRO}-rqt-tf-tree \
+        ros-${ROS_DISTRO}-plotjuggler-ros \
+        ros-${ROS_DISTRO}-cv-bridge \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # ==========================================

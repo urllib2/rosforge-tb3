@@ -1,12 +1,9 @@
 services:
   ros2-tb3:
-    image: urllib2/rosforge-tb3:latest
-<<<<<<< HEAD
     build:
       context: ./docker
       dockerfile: Dockerfile
-=======
->>>>>>> ee06564 (2 versions one for the teacher and the other for the student)
+    image: urllib2/rosforge-tb3:latest
     ports:
       - "6080:80"
     environment:

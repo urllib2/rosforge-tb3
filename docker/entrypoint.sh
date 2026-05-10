@@ -1,6 +1,6 @@
 #!/bin/bash
 # ==============================================================
-# entrypoint.sh  —  RUNTIME ONLY
+# entrypoint.sh  ???  RUNTIME ONLY
 # Runs every time the container starts. Idempotent: safe to
 # restart the container without side effects.
 # ==============================================================
@@ -60,7 +60,7 @@ sed -i "s/password = WebUtil.getConfigVar('password');/password = '$VNC_PASSWORD
     /usr/lib/novnc/app/ui.js
 
 # ==========================================
-# CycloneDDS config — copy from /etc to home
+# CycloneDDS config ??? copy from /etc to home
 # (home may be a bind-mount that didn't exist at build time)
 # ==========================================
 if [ ! -f "$HOME_DIR/cyclone_config.xml" ]; then
@@ -69,7 +69,7 @@ if [ ! -f "$HOME_DIR/cyclone_config.xml" ]; then
 fi
 
 # ==========================================
-# .bashrc — write once, guarded by grep
+# .bashrc ??? write once, guarded by grep
 # All env vars that affect interactive terminals go here.
 # Process-level vars (Gazebo, OpenGL) are set in Dockerfile ENV.
 # ==========================================
@@ -164,7 +164,7 @@ stderr_logfile=/var/log/novnc.log
 EOF
 
 # ==========================================
-# Desktop shortcut — Terminator
+# Desktop shortcut ??? Terminator
 # ==========================================
 mkdir -p "$HOME_DIR/Desktop"
 cat <<EOF > "$HOME_DIR/Desktop/terminator.desktop"

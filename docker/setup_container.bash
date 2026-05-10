@@ -1,8 +1,8 @@
 #!/bin/bash
 # ==============================================================
-# setup_container.bash  —  BUILD TIME ONLY
+# setup_container.bash  ???  BUILD TIME ONLY
 # Runs once during `docker build`. Must not touch users, home
-# directories, or .bashrc — those are runtime concerns handled
+# directories, or .bashrc ??? those are runtime concerns handled
 # by entrypoint.sh.
 # ==============================================================
 set -e

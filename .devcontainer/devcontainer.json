@@ -19,7 +19,7 @@
         "ms-python.python",
         "ms-vscode.cpptools",
         "ms-vscode.cpptools-extension-pack",
-        "RooVeterinaryInc.roo-cline"
+        "kilocode.kilo-code"
       ],
       "settings": {
         "python.defaultInterpreterPath": "/usr/bin/python3",

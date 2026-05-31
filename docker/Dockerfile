@@ -21,7 +21,7 @@ ENV ROS_DISTRO=jazzy
 ENV LIBGL_ALWAYS_SOFTWARE=1
 ENV MESA_GL_VERSION_OVERRIDE=3.3
 ENV GZ_VERBOSE=0
-ENV TURTLEBOT3_MODEL=waffle
+ENV TURTLEBOT3_MODEL=burger
 ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 ENV CYCLONEDDS_URI=file:///home/ubuntu/cyclone_config.xml
 
@@ -51,10 +51,7 @@ RUN git clone https://github.com/AtsushiSaito/noVNC.git -b add_clipboard_support
     sed -i "s/UI.initSetting('resize', 'off');/UI.initSetting('resize', 'remote');/g" /usr/lib/novnc/app/ui.js
 
 # ==========================================
-# Nav2 + SLAM + DDS + Tools
-# NOTE: turtlebot3 and turtlebot3-simulations are built from
-# source in setup_container.bash to allow applying fixes.
-# Only turtlebot3-msgs is installed via apt as a dependency.
+# TB3 + Nav2 + SLAM + DDS + Tools
 # ==========================================
 RUN apt-get update -q && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
@@ -64,7 +61,8 @@ RUN apt-get update -q && \
         ros-${ROS_DISTRO}-slam-toolbox \
         ros-${ROS_DISTRO}-ros-gz \
         ros-${ROS_DISTRO}-ros-gz-sim \
-        ros-${ROS_DISTRO}-turtlebot3-msgs \
+        ros-${ROS_DISTRO}-turtlebot3 \
+        ros-${ROS_DISTRO}-turtlebot3-simulations \
         ros-${ROS_DISTRO}-teleop-twist-keyboard \
         ros-${ROS_DISTRO}-rclpy \
         ros-${ROS_DISTRO}-geometry-msgs \
@@ -77,7 +75,7 @@ RUN apt-get update -q && \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # ==========================================
-# Build-time setup (Python tools, TB3 source build, fixes)
+# Build-time setup (Python tools, static config files)
 # Does NOT touch users or .bashrc — that's entrypoint.sh's job
 # ==========================================
 COPY ./setup_container.bash /

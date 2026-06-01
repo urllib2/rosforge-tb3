@@ -13,6 +13,7 @@ services:
       - ./ros_ws/install:/home/ubuntu/ros_ws/install
       - ./ros_ws/build:/home/ubuntu/ros_ws/build
       - ./ros_ws/log:/home/ubuntu/ros_ws/log
+      - ./continue_config:/home/ubuntu/.continue
     stdin_open: true
     tty: true
     restart: unless-stopped

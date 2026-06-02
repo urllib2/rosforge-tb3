@@ -14,38 +14,41 @@ Install these tools before starting:
 
 > ⚠️ **Minimum requirements:** 8 GB RAM, 4 CPU cores, 15 GB free disk space.
 
+> 💡 **Windows users:** Docker Desktop installs and manages WSL2 automatically. No manual WSL2 setup needed.
+
 ---
 
 ## First-Time Setup
 
-### Step 1 — Pull the container image
+### Step 1 — Clone the course repository
 
-Open a terminal (PowerShell on Windows, Terminal on Mac) and run:
+Open a terminal (PowerShell on Windows) and run:
 
 ```bash
-docker pull urllib2/rosforge-tb3:latest
+git clone https://github.com/urllib2/rosforge-tb3.git
 ```
 
-This downloads ~2 GB. It only happens once. Wait for it to complete fully before continuing.
-
-> 💡 If the download stops or fails, just run the same command again — it will resume from where it left off.
-
-### Step 2 — Download the course folder
-
-Download and unzip the course folder anywhere on your machine. Recommended:
+Or download and unzip from GitHub. Place the folder somewhere convenient:
 
 ```
 C:\Users\YourName\Documents\rosforge-tb3\
 ```
 
-### Step 3 — Open in VS Code
+### Step 2 — Open in VS Code
 
 1. Open VS Code
-2. **File → Open Folder** → select `rosforge-tb3/`
-3. Press **Ctrl+Shift+P** → type `Dev Containers: Reopen in Container` → press Enter
-4. Wait ~1 minute for the container to start
+2. **File → Open Folder** → select the `rosforge-tb3/` folder
+3. VS Code will detect the Dev Container and show a popup — click **"Reopen in Container"**
+4. If no popup appears: **Ctrl+Shift+P** → type `Dev Containers: Reopen in Container` → press Enter
+5. Wait 1–2 minutes on first launch (downloads the container image ~3 GB)
 
-VS Code will reopen inside the container. You are ready.
+VS Code will reopen inside the container with all extensions installed. You are ready.
+
+### Step 3 — Set up Continue.dev (AI assistant)
+
+1. Click the **Continue** icon in the VS Code sidebar
+2. Go to Settings → Add your API key (Google Gemini or OpenAI)
+3. Your key is saved automatically and persists across restarts
 
 ### Step 4 — Build the workspace (once)
 
@@ -147,9 +150,6 @@ ros2 launch nav2_bringup bringup_launch.py \
 **Container not starting**
 Make sure Docker Desktop is running before opening VS Code.
 
-**`docker pull` fails or stops mid-download**
-Run `docker pull urllib2/rosforge-tb3:latest` again — it resumes automatically.
-
 **Gazebo is slow**
 This is normal on machines without a dedicated GPU. The container uses software rendering.
 
@@ -161,6 +161,9 @@ Wait 10–15 seconds after the container starts, then refresh the page.
 
 **VS Code says "container already exists"**
 Open Docker Desktop, stop and remove the `rosforge-tb3` container, then reopen in VS Code.
+
+**Continue.dev API key lost after reinstall**
+Your key is stored in `rosforge-tb3/continue_config/` on your machine. Keep this folder safe.
 
 ---
 

@@ -1,0 +1,39 @@
+{
+  "name": "RosForge — ROS2 TurtleBot3",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "ros2-tb3",
+  "workspaceFolder": "/home/ubuntu/ros_ws",
+  "remoteUser": "ubuntu",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "Ranch-Hand-Robotics.rde-ros-2",
+        "Ranch-Hand-Robotics.rde-urdf",
+        "Ranch-Hand-Robotics.rde-pack",
+        "redhat.vscode-xml",
+        "PKief.material-icon-theme",
+        "GitHub.github-vscode-theme",
+        "twxs.cmake",
+        "ms-vscode.cmake-tools",
+        "ms-python.python",
+        "ms-vscode.cpptools",
+        "ms-vscode.cpptools-extension-pack",
+        "RooVeterinaryInc.roo-cline"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/bin/python3",
+        "ros.distro": "jazzy",
+        "editor.formatOnSave": true,
+        "editor.tabSize": 2,
+        "workbench.iconTheme": "material-icon-theme",
+        "workbench.colorTheme": "GitHub Dark",
+        "files.autoSave": "afterDelay",
+        "files.autoSaveDelay": 1000,
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+
+  "postAttachCommand": "bash -c 'source /opt/ros/jazzy/setup.bash && [ -f /home/ubuntu/ros_ws/install/setup.bash ] && source /home/ubuntu/ros_ws/install/setup.bash; echo \"✅ ROS2 Jazzy ready\"'"
+}

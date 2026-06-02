@@ -16,8 +16,7 @@ source /opt/ros/jazzy/setup.bash
 pip install --break-system-packages --no-cache-dir black urdf-parser-py
 
 # ==========================================
-# CycloneDDS config (static file, goes to /etc so it's
-# available before the home directory exists at runtime)
+# CycloneDDS config
 # ==========================================
 cat <<EOF > /etc/cyclone_config.xml
 <?xml version="1.0" encoding="UTF-8" ?>
@@ -35,15 +34,14 @@ cat <<EOF > /etc/cyclone_config.xml
 EOF
 
 # ==========================================
-# ros_ws skeleton (bind-mounted at runtime, but colcon
-# expects the directory to pre-exist inside the container)
+# ros_ws skeleton
 # ==========================================
 mkdir -p /home/ubuntu/ros_ws/src
 
 # ==========================================
-# TurtleBot3 from source with all fixes applied
-# Built into /opt/tb3_ws so it's separate from the student
-# workspace and never overwritten by bind mounts.
+# TurtleBot3 from source — simulation only
+# Only the packages needed for Gazebo simulation are built.
+# Hardware packages (turtlebot3_node, bringup, etc.) are skipped.
 # ==========================================
 echo "===== Cloning TurtleBot3 from source ====="
 mkdir -p /opt/tb3_ws/src
@@ -62,14 +60,12 @@ sed -i 's/<height>1080<\/height>/<height>480<\/height>/' \
 
 # ------------------------------------------
 # Fix 2: Camera update rate 15Hz
-# Matches actual achievable rate on student hardware
 # ------------------------------------------
 sed -i '377s/<update_rate>30<\/update_rate>/<update_rate>15<\/update_rate>/' \
     /opt/tb3_ws/src/turtlebot3_simulations/turtlebot3_gazebo/models/turtlebot3_waffle/model.sdf
 
 # ------------------------------------------
-# Fix 3: Physics rate 500Hz (default 1000Hz)
-# Halves CPU load with negligible impact on TB3 behavior
+# Fix 3: Physics rate 500Hz
 # ------------------------------------------
 sed -i 's/<real_time_update_rate>1000.0<\/real_time_update_rate>/<real_time_update_rate>500.0<\/real_time_update_rate>/' \
     /opt/tb3_ws/src/turtlebot3_simulations/turtlebot3_gazebo/worlds/turtlebot3_world.world
@@ -77,8 +73,7 @@ sed -i 's/<max_step_size>0.001<\/max_step_size>/<max_step_size>0.002<\/max_step_
     /opt/tb3_ws/src/turtlebot3_simulations/turtlebot3_gazebo/worlds/turtlebot3_world.world
 
 # ------------------------------------------
-# Fix 4: Bridge yaml — add camera/image_raw to parameter_bridge
-# Replaces the unreliable image_bridge process
+# Fix 4: Bridge yaml with camera/image_raw
 # ------------------------------------------
 cat > /opt/tb3_ws/src/turtlebot3_simulations/turtlebot3_gazebo/params/turtlebot3_waffle_bridge.yaml << 'EOF'
 - ros_topic_name: "clock"
@@ -129,8 +124,7 @@ cat > /opt/tb3_ws/src/turtlebot3_simulations/turtlebot3_gazebo/params/turtlebot3
 EOF
 
 # ------------------------------------------
-# Fix 5: Remove image_bridge from spawn launch file
-# camera/image_raw is now handled by parameter_bridge
+# Fix 5: Remove image_bridge from spawn launch
 # ------------------------------------------
 cat > /opt/tb3_ws/src/turtlebot3_simulations/turtlebot3_gazebo/launch/spawn_turtlebot3.launch.py << 'EOF'
 import os
@@ -180,21 +174,23 @@ def generate_launch_description():
     ld.add_action(declare_y_position_cmd)
     ld.add_action(start_gazebo_ros_spawner_cmd)
     ld.add_action(start_gazebo_ros_bridge_cmd)
-    # image_bridge removed — camera/image_raw is handled by parameter_bridge
+    # image_bridge removed — camera/image_raw handled by parameter_bridge
     return ld
 EOF
 
 # ------------------------------------------
-# Build the workspace
+# Build simulation packages only
+# turtlebot3_fake_node is required by turtlebot3_simulations
 # ------------------------------------------
-echo "===== Building TurtleBot3 workspace ====="
+echo "===== Building TurtleBot3 simulation packages ====="
 cd /opt/tb3_ws
-rosdep install --from-paths src --ignore-src -r -y
-colcon build --symlink-install
+colcon build --symlink-install --packages-select \
+  turtlebot3_description \
+  turtlebot3_fake_node \
+  turtlebot3_gazebo \
+  turtlebot3_simulations
 
-# ------------------------------------------
-# Make tb3_ws available to all users at runtime
-# ------------------------------------------
+# Make available to all users
 echo "source /opt/tb3_ws/install/setup.bash" >> /etc/bash.bashrc
 
 echo "===== Build-time setup complete ====="

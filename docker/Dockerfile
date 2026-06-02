@@ -51,10 +51,11 @@ RUN git clone https://github.com/AtsushiSaito/noVNC.git -b add_clipboard_support
     sed -i "s/UI.initSetting('resize', 'off');/UI.initSetting('resize', 'remote');/g" /usr/lib/novnc/app/ui.js
 
 # ==========================================
-# Nav2 + SLAM + DDS + Tools
-# NOTE: turtlebot3 and turtlebot3-simulations are built from
-# source in setup_container.bash to allow applying fixes.
-# Only turtlebot3-msgs is installed via apt as a dependency.
+# Simulation-only packages:
+# - No cartographer (using slam-toolbox)
+# - No hardware drivers (dynamixel, hls-lfcd, turtlebot3-node)
+# - No turtlebot3/turtlebot3-simulations apt (built from source)
+# - Only turtlebot3-msgs kept as dependency
 # ==========================================
 RUN apt-get update -q && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
@@ -77,7 +78,7 @@ RUN apt-get update -q && \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # ==========================================
-# Build-time setup (Python tools, TB3 source build, fixes)
+# Build-time setup (Python tools, TB3 source build + fixes)
 # Does NOT touch users or .bashrc — that's entrypoint.sh's job
 # ==========================================
 COPY ./setup_container.bash /

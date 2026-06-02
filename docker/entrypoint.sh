@@ -88,7 +88,7 @@ _append_if_missing "ros_ws/install/setup.bash" \
     "[ -f $HOME_DIR/ros_ws/install/setup.bash ] && source $HOME_DIR/ros_ws/install/setup.bash"
 
 _append_if_missing "TURTLEBOT3_MODEL" \
-    "export TURTLEBOT3_MODEL=burger"
+    "export TURTLEBOT3_MODEL=waffle"
 
 _append_if_missing "GZ_SIM_RESOURCE_PATH" \
     "export GZ_SIM_RESOURCE_PATH=\$GZ_SIM_RESOURCE_PATH:/opt/ros/jazzy/share/turtlebot3_gazebo/models"

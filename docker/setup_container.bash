@@ -40,8 +40,13 @@ mkdir -p /home/ubuntu/ros_ws/src
 
 # ==========================================
 # TurtleBot3 from source — simulation only
-# Only the packages needed for Gazebo simulation are built.
-# Hardware packages (turtlebot3_node, bringup, etc.) are skipped.
+# Packages selected to cover full Rico book curriculum:
+#   - turtlebot3_description: URDF/meshes
+#   - turtlebot3_fake_node: required by turtlebot3_simulations
+#   - turtlebot3_gazebo: Gazebo world and launch files
+#   - turtlebot3_simulations: top-level simulation package
+#   - turtlebot3_teleop: keyboard teleoperation (Ch.3+)
+#   - turtlebot3_navigation2: Nav2 TB3 launch files (Ch.6)
 # ==========================================
 echo "===== Cloning TurtleBot3 from source ====="
 mkdir -p /opt/tb3_ws/src
@@ -51,7 +56,6 @@ git clone -b jazzy https://github.com/ROBOTIS-GIT/turtlebot3.git
 
 # ------------------------------------------
 # Fix 1: Camera resolution 640x480
-# Default 1920x1080 is too heavy for student hardware
 # ------------------------------------------
 sed -i 's/<width>1920<\/width>/<width>640<\/width>/' \
     /opt/tb3_ws/src/turtlebot3_simulations/turtlebot3_gazebo/models/turtlebot3_waffle/model.sdf
@@ -179,16 +183,17 @@ def generate_launch_description():
 EOF
 
 # ------------------------------------------
-# Build simulation packages only
-# turtlebot3_fake_node is required by turtlebot3_simulations
+# Build simulation + teleop + navigation packages
 # ------------------------------------------
-echo "===== Building TurtleBot3 simulation packages ====="
+echo "===== Building TurtleBot3 packages ====="
 cd /opt/tb3_ws
 colcon build --symlink-install --packages-select \
   turtlebot3_description \
   turtlebot3_fake_node \
   turtlebot3_gazebo \
-  turtlebot3_simulations
+  turtlebot3_simulations \
+  turtlebot3_teleop \
+  turtlebot3_navigation2
 
 # Make available to all users
 echo "source /opt/tb3_ws/install/setup.bash" >> /etc/bash.bashrc

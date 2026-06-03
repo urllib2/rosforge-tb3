@@ -45,10 +45,13 @@ C:\Users\YourName\Documents\rosforge-tb3\
 VS Code will reopen inside the container with all extensions installed. You are ready.
 
 ### Step 3 — Set up Continue.dev (AI assistant)
-
-1. Click the **Continue** icon in the VS Code sidebar
-2. Go to Settings → Add your API key (Google Gemini or OpenAI)
-3. Your key is saved automatically and persists across restarts
+1. Copy the template config:
+   - Windows: copy `continue_config.template.yaml` to `continue_config\config.yaml`
+   - Mac/Linux: `cp continue_config.template.yaml continue_config/config.yaml`
+2. Open `continue_config/config.yaml` and replace:
+   - `YOUR_OPENROUTER_API_KEY` → your OpenRouter API key (get one at openrouter.ai)
+   - `YOUR_DEEPSEEK_API_KEY` → your DeepSeek API key (get one at platform.deepseek.com)
+3. Save the file — Continue.dev will pick it up automatically inside the container
 
 ### Step 4 — Build the workspace (once)
 

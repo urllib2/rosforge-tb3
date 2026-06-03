@@ -109,6 +109,16 @@ This folder is synchronized between your machine and the container. Your code is
 ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py
 ```
 
+### Activate the camera (run once after Gazebo starts)
+
+After launching Gazebo, run this once to activate the camera bridge:
+
+```bash
+ros2 topic echo /camera/image_raw --once > /dev/null
+```
+
+> 💡 The camera uses a lazy bridge that activates on first subscriber. This command wakes it up — after that it publishes continuously.
+
 ### Start SLAM mapping
 
 ```bash
@@ -164,6 +174,9 @@ Open Docker Desktop, stop and remove the `rosforge-tb3` container, then reopen i
 
 **Continue.dev API key lost after reinstall**
 Your key is stored in `rosforge-tb3/continue_config/` on your machine. Keep this folder safe.
+
+**`ros2 topic hz /camera/image_raw` shows nothing**
+Run `ros2 topic echo /camera/image_raw --once > /dev/null` first to activate the camera bridge, then retry `hz`.
 
 ---
 

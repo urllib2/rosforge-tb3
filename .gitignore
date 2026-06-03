@@ -11,4 +11,4 @@ log/
 __pycache__/
 *.pyc
 
-.env
+.envcontinue_config/

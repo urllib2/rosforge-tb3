@@ -1,0 +1,26 @@
+name: RosForge — ROS2 Assistant
+version: 1.0.0
+schema: v1
+models:
+  - name: Gemini 2.5 Flash Lite
+    provider: openai
+    model: google/gemini-2.5-flash-lite-preview-06-17
+    apiBase: https://openrouter.ai/api/v1
+    apiKey: YOUR_OPENROUTER_API_KEY
+    systemMessage: "You are an expert ROS 2 Jazzy Python developer."
+    roles:
+      - chat
+      - edit
+  - name: DeepSeek FIM
+    provider: deepseek
+    model: deepseek-v4-flash
+    apiKey: YOUR_DEEPSEEK_API_KEY
+    roles:
+      - autocomplete
+    autocompleteOptions:
+      maxPromptTokens: 256
+      maxTokens: 64
+      debounceDelay: 500
+      template: fim
+    requestOptions:
+      temperature: 0.1

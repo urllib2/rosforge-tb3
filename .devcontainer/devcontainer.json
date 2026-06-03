@@ -5,6 +5,14 @@
   "workspaceFolder": "/home/ubuntu/ros_ws",
   "remoteUser": "ubuntu",
 
+  "mounts": [
+    "source=${localWorkspaceFolder}/ros_ws/src,target=/home/ubuntu/ros_ws/src,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/ros_ws/build,target=/home/ubuntu/ros_ws/build,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/ros_ws/install,target=/home/ubuntu/ros_ws/install,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/ros_ws/log,target=/home/ubuntu/ros_ws/log,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/continue_config,target=/home/ubuntu/.continue,type=bind,consistency=cached"
+  ],
+
   "customizations": {
     "vscode": {
       "extensions": [

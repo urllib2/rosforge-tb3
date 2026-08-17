@@ -40,6 +40,12 @@ mkdir -p /home/ubuntu/ros_ws/src
 
 # ==========================================
 # TurtleBot3 from source — simulation only
+#
+# PRINCIPAL ROBOT:
+#   TurtleBot3 Waffle Pi
+#
+# TURTLEBOT3_MODEL=waffle_pi
+#
 # Packages selected to cover full Rico book curriculum:
 #   - turtlebot3_description: URDF/meshes
 #   - turtlebot3_fake_node: required by turtlebot3_simulations
@@ -49,77 +55,116 @@ mkdir -p /home/ubuntu/ros_ws/src
 #   - turtlebot3_navigation2: Nav2 TB3 launch files (Ch.6)
 # ==========================================
 echo "===== Cloning TurtleBot3 from source ====="
+
 mkdir -p /opt/tb3_ws/src
 cd /opt/tb3_ws/src
+
 git clone -b jazzy https://github.com/ROBOTIS-GIT/turtlebot3_simulations.git
 git clone -b jazzy https://github.com/ROBOTIS-GIT/turtlebot3.git
 
-# ------------------------------------------
-# Fix 1: Camera resolution 640x480
-# ------------------------------------------
-sed -i 's/<width>1920<\/width>/<width>640<\/width>/' \
-    /opt/tb3_ws/src/turtlebot3_simulations/turtlebot3_gazebo/models/turtlebot3_waffle/model.sdf
-sed -i 's/<height>1080<\/height>/<height>480<\/height>/' \
-    /opt/tb3_ws/src/turtlebot3_simulations/turtlebot3_gazebo/models/turtlebot3_waffle/model.sdf
+# ==========================================
+# Verify Waffle Pi model exists
+# ==========================================
+WAFFLE_PI_MODEL="/opt/tb3_ws/src/turtlebot3_simulations/turtlebot3_gazebo/models/turtlebot3_waffle_pi"
 
-# ------------------------------------------
-# Fix 2: Camera update rate 15Hz
-# ------------------------------------------
-sed -i '377s/<update_rate>30<\/update_rate>/<update_rate>15<\/update_rate>/' \
-    /opt/tb3_ws/src/turtlebot3_simulations/turtlebot3_gazebo/models/turtlebot3_waffle/model.sdf
+if [ ! -f "$WAFFLE_PI_MODEL/model.sdf" ]; then
+    echo "ERROR: TurtleBot3 Waffle Pi model.sdf not found!"
+    exit 1
+fi
 
-# ------------------------------------------
+echo "Waffle Pi model found:"
+echo "  $WAFFLE_PI_MODEL/model.sdf"
+
+# ==========================================
+# Fix 1: Waffle Pi camera resolution 640x480
+# ==========================================
+echo "===== Configuring Waffle Pi camera: 640x480 ====="
+
+sed -i 's/<width>1920<\/width>/<width>640<\/width>/g' \
+    "$WAFFLE_PI_MODEL/model.sdf"
+
+sed -i 's/<height>1080<\/height>/<height>480<\/height>/g' \
+    "$WAFFLE_PI_MODEL/model.sdf"
+
+# ==========================================
+# Fix 2: Waffle Pi camera update rate 15Hz
+# ==========================================
+echo "===== Configuring Waffle Pi camera: 15 Hz ====="
+
+sed -i 's/<update_rate>30<\/update_rate>/<update_rate>15<\/update_rate>/g' \
+    "$WAFFLE_PI_MODEL/model.sdf"
+
+# ==========================================
 # Fix 3: Physics rate 500Hz
-# ------------------------------------------
-sed -i 's/<real_time_update_rate>1000.0<\/real_time_update_rate>/<real_time_update_rate>500.0<\/real_time_update_rate>/' \
-    /opt/tb3_ws/src/turtlebot3_simulations/turtlebot3_gazebo/worlds/turtlebot3_world.world
-sed -i 's/<max_step_size>0.001<\/max_step_size>/<max_step_size>0.002<\/max_step_size>/' \
+# ==========================================
+echo "===== Configuring Gazebo physics: 500 Hz ====="
+
+sed -i 's/<real_time_update_rate>1000.0<\/real_time_update_rate>/<real_time_update_rate>500.0<\/real_time_update_rate>/g' \
     /opt/tb3_ws/src/turtlebot3_simulations/turtlebot3_gazebo/worlds/turtlebot3_world.world
 
-# ------------------------------------------
-# Fix 4: Bridge yaml with camera/image_raw
-# ------------------------------------------
-cat > /opt/tb3_ws/src/turtlebot3_simulations/turtlebot3_gazebo/params/turtlebot3_waffle_bridge.yaml << 'EOF'
+sed -i 's/<max_step_size>0.001<\/max_step_size>/<max_step_size>0.002<\/max_step_size>/g' \
+    /opt/tb3_ws/src/turtlebot3_simulations/turtlebot3_gazebo/worlds/turtlebot3_world.world
+
+# ==========================================
+# Fix 4: Waffle Pi bridge yaml
+#
+# Adds:
+#   camera/camera_info
+#   camera/image_raw
+#
+# to the standard Waffle Pi bridge.
+# ==========================================
+echo "===== Creating Waffle Pi bridge configuration ====="
+
+cat > /opt/tb3_ws/src/turtlebot3_simulations/turtlebot3_gazebo/params/turtlebot3_waffle_pi_bridge.yaml << 'EOF'
 - ros_topic_name: "clock"
   gz_topic_name: "clock"
   ros_type_name: "rosgraph_msgs/msg/Clock"
   gz_type_name: "gz.msgs.Clock"
   direction: GZ_TO_ROS
+
 - ros_topic_name: "joint_states"
   gz_topic_name: "joint_states"
   ros_type_name: "sensor_msgs/msg/JointState"
   gz_type_name: "gz.msgs.Model"
   direction: GZ_TO_ROS
+
 - ros_topic_name: "odom"
   gz_topic_name: "odom"
   ros_type_name: "nav_msgs/msg/Odometry"
   gz_type_name: "gz.msgs.Odometry"
   direction: GZ_TO_ROS
+
 - ros_topic_name: "tf"
   gz_topic_name: "tf"
   ros_type_name: "tf2_msgs/msg/TFMessage"
   gz_type_name: "gz.msgs.Pose_V"
   direction: GZ_TO_ROS
+
 - ros_topic_name: "cmd_vel"
   gz_topic_name: "cmd_vel"
   ros_type_name: "geometry_msgs/msg/TwistStamped"
   gz_type_name: "gz.msgs.Twist"
   direction: ROS_TO_GZ
+
 - ros_topic_name: "imu"
   gz_topic_name: "imu"
   ros_type_name: "sensor_msgs/msg/Imu"
   gz_type_name: "gz.msgs.IMU"
   direction: GZ_TO_ROS
+
 - ros_topic_name: "scan"
   gz_topic_name: "scan"
   ros_type_name: "sensor_msgs/msg/LaserScan"
   gz_type_name: "gz.msgs.LaserScan"
   direction: GZ_TO_ROS
+
 - ros_topic_name: "camera/camera_info"
   gz_topic_name: "camera/camera_info"
   ros_type_name: "sensor_msgs/msg/CameraInfo"
   gz_type_name: "gz.msgs.CameraInfo"
   direction: GZ_TO_ROS
+
 - ros_topic_name: "camera/image_raw"
   gz_topic_name: "camera/image_raw"
   ros_type_name: "sensor_msgs/msg/Image"
@@ -127,66 +172,112 @@ cat > /opt/tb3_ws/src/turtlebot3_simulations/turtlebot3_gazebo/params/turtlebot3
   direction: GZ_TO_ROS
 EOF
 
-# ------------------------------------------
+# ==========================================
 # Fix 5: Remove image_bridge from spawn launch
-# ------------------------------------------
+#
+# The camera is now handled directly by
+# ros_gz_bridge / parameter_bridge.
+# ==========================================
+echo "===== Updating Waffle Pi spawn launch ====="
+
 cat > /opt/tb3_ws/src/turtlebot3_simulations/turtlebot3_gazebo/launch/spawn_turtlebot3.launch.py << 'EOF'
 import os
+
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
+
 def generate_launch_description():
+
     TURTLEBOT3_MODEL = os.environ['TURTLEBOT3_MODEL']
+
+    # Example:
+    # TURTLEBOT3_MODEL=waffle_pi
+    #
+    # becomes:
+    # turtlebot3_waffle_pi
     model_folder = 'turtlebot3_' + TURTLEBOT3_MODEL
+
     urdf_path = os.path.join(
         get_package_share_directory('turtlebot3_gazebo'),
-        'models', model_folder, 'model.sdf'
+        'models',
+        model_folder,
+        'model.sdf'
     )
+
     x_pose = LaunchConfiguration('x_pose', default='0.0')
     y_pose = LaunchConfiguration('y_pose', default='0.0')
+
     declare_x_position_cmd = DeclareLaunchArgument(
-        'x_pose', default_value='0.0',
-        description='Specify namespace of the robot')
+        'x_pose',
+        default_value='0.0',
+        description='Specify namespace of the robot'
+    )
+
     declare_y_position_cmd = DeclareLaunchArgument(
-        'y_pose', default_value='0.0',
-        description='Specify namespace of the robot')
+        'y_pose',
+        default_value='0.0',
+        description='Specify namespace of the robot'
+    )
+
     start_gazebo_ros_spawner_cmd = Node(
-        package='ros_gz_sim', executable='create',
+        package='ros_gz_sim',
+        executable='create',
         arguments=[
-            '-name', TURTLEBOT3_MODEL,
-            '-file', urdf_path,
-            '-x', x_pose,
-            '-y', y_pose,
-            '-z', '0.01'
+            '-name',
+            TURTLEBOT3_MODEL,
+            '-file',
+            urdf_path,
+            '-x',
+            x_pose,
+            '-y',
+            y_pose,
+            '-z',
+            '0.01'
         ],
         output='screen',
     )
+
     bridge_params = os.path.join(
         get_package_share_directory('turtlebot3_gazebo'),
-        'params', model_folder + '_bridge.yaml'
+        'params',
+        model_folder + '_bridge.yaml'
     )
+
     start_gazebo_ros_bridge_cmd = Node(
-        package='ros_gz_bridge', executable='parameter_bridge',
-        arguments=['--ros-args', '-p', f'config_file:={bridge_params}'],
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        arguments=[
+            '--ros-args',
+            '-p',
+            f'config_file:={bridge_params}'
+        ],
         output='screen',
     )
+
     ld = LaunchDescription()
+
     ld.add_action(declare_x_position_cmd)
     ld.add_action(declare_y_position_cmd)
     ld.add_action(start_gazebo_ros_spawner_cmd)
     ld.add_action(start_gazebo_ros_bridge_cmd)
-    # image_bridge removed — camera/image_raw handled by parameter_bridge
+
+    # image_bridge removed.
+    # camera/image_raw is handled by parameter_bridge.
+
     return ld
 EOF
 
-# ------------------------------------------
+# ==========================================
 # Build simulation + teleop + navigation packages
-# ------------------------------------------
+# ==========================================
 echo "===== Building TurtleBot3 packages ====="
+
 cd /opt/tb3_ws
+
 colcon build --symlink-install --packages-select \
   turtlebot3_description \
   turtlebot3_fake_node \
@@ -195,7 +286,11 @@ colcon build --symlink-install --packages-select \
   turtlebot3_teleop \
   turtlebot3_navigation2
 
+# ==========================================
 # Make available to all users
+# ==========================================
 echo "source /opt/tb3_ws/install/setup.bash" >> /etc/bash.bashrc
 
 echo "===== Build-time setup complete ====="
+echo "===== Principal robot: TurtleBot3 Waffle Pi ====="
+echo "===== TURTLEBOT3_MODEL must be: waffle_pi ====="
